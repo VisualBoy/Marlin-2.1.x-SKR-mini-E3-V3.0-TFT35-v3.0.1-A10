@@ -1,3 +1,176 @@
+
+
+# Upgrading Geeetech A10 GT2560 V4 to BTT SKR Mini E3 V3 — Guide
+
+This guide documents verified wiring, safety precautions, and Marlin configuration notes for migrating a Geeetech A10 (GT2560 V4.0) to a BigTreeTech SKR Mini E3 V3. It assumes the stock 18-pin (2×9) EXTRUDER cable is present and that the pin labels have been verified before cutting or re-terminating. Follow all safety guidance precisely.
+
+
+---
+
+Summary Checklist
+
+Remove any external heated-bed MOSFET and connect the bed directly to the SKR heated-bed screw terminal.
+
+Do not reuse the old DC MOSFET as a mains PS-ON device—use a proper AC relay.
+
+Isolate four BLTouch-related wires in the 18-pin harness (will carry 5 V when powered).
+
+Cut and re-terminate the 18-pin cable to the SKR ports listed below.
+
+Use the provided Marlin configuration snippet and migrate the rest of the A10 configuration accordingly.
+
+
+
+---
+
+1. Power and Peripherals
+
+External MOSFET Module
+
+The SKR Mini E3 V3 includes an onboard heated-bed MOSFET suitable for direct bed wiring. Remove the external DC MOSFET module and connect the bed +/− to the SKR heated-bed screw terminal.
+
+> Warning:
+Do not use the external DC MOSFET module to switch AC mains (PS-ON). It is designed only for low-voltage DC and will pose a fire/electrocution risk. Use a rated AC relay or proper mains switching system.
+
+
+
+Endstops
+
+Geeetech endstops use 3 wires (VCC, GND, SIG); the SKR expects 2 wires (GND, SIG).
+
+You may plug the Geeetech 3-pin connector into the SKR 2-pin header ensuring GND and SIG align. VCC will remain unconnected.
+
+Preferred: remove the VCC wire from the connector and insulate it individually to prevent shorts.
+
+
+
+---
+
+2. BTT TFT35 Display Connections
+
+Marlin Mode (12864 emulation): connect EXP1 and EXP2 ribbons to SKR EXP1/EXP2.
+
+Touchscreen Mode: connect the 5-pin RS232 cable to the SKR TFT port.
+
+
+Both modes can be connected simultaneously; switch modes via long-press on the TFT encoder.
+
+
+---
+
+3. Extruder Harness Re-Termination (Verified)
+
+Cut the 18-pin harness and re-terminate groups to the corresponding SKR connectors.
+Verified mapping:
+
+Function	18-Pin Location & Label	Wire Color	SKR Mini E3 V3 Port
+
+Hotend Heater	Row 9 Right HE0; Row 8 Left VDC	Thick RED; Thick BLACK	Hotend Heater (screw terminal)
+Hotend Thermistor	Row 5 Left T0; Row 5 Right T0	Thin BLACK; Thin WHITE	T0 (JST-XH 2-pin)
+Hotend Fan (FAN0)	+: Row 8 Right VDC; −: Row 1 Left FAN0-	+ ORANGE; − GREEN	FAN0 (JST-XH 2-pin)
+Part-Cooling Fan	+: Row 8 Right VDC (split); −: Row 6 Left/Right PGND1 (join)	+ ORANGE (split); − YELLOW + VIOLET (joined)	Part-Cooling Fan (JST-XH 2-pin)
+
+
+Notes
+
+When splitting or joining wires, ensure mechanically solid joints, correct polarity, and proper insulation (heat-shrink, strain relief).
+
+Incorrect fan polarity may damage the fan.
+
+
+
+---
+
+4. Critical Live Wires to Isolate (No BLTouch)
+
+Without a BLTouch installed, four wires in the 18-pin harness carry 5 V when the SKR is powered. These must be individually cut and insulated.
+
+18-Pin	Label	Color	Action
+
+Pin 2 Left	PB5	Gray	Isolate individually
+Pin 2 Right	Z0-	Blue	Isolate individually
+Pin 3 Left	VCC	Thin Yellow	Isolate individually
+Pin 4 Left	GND	Brown	Isolate individually
+
+
+After isolating these wires, connect a standard mechanical Z endstop to the SKR Z-STOP header.
+
+
+---
+
+5. Firmware (Marlin) Essentials
+
+Port all relevant hardware configuration details from the original A10 build into the SKR Marlin firmware.
+
+Minimal required entries:
+
+// Motherboard
+#define MOTHERBOARD BOARD_BTT_SKR_MINI_E3_V3_0
+
+// Stepper driver types
+#define X_DRIVER_TYPE  TMC2209
+#define Y_DRIVER_TYPE  TMC2209
+#define Z_DRIVER_TYPE  TMC2209
+#define E0_DRIVER_TYPE TMC2209
+
+// Thermistors (match original A10 config)
+#define TEMP_SENSOR_0    1
+#define TEMP_SENSOR_BED  1
+
+// Endstop logic
+#define X_MIN_ENDSTOP_INVERTING false
+#define Y_MIN_ENDSTOP_INVERTING false
+#define Z_MIN_ENDSTOP_INVERTING false
+
+To-Do:
+
+[ ] Port steps/mm, accelerations, PID values, probe offsets, motor currents, and precise sensor types.
+
+[ ] Verify TMC2209 UART wiring and enable UART mode in Marlin if using sensorless homing or driver diagnostics.
+
+
+
+---
+
+6. 18-Pin Connector — Full Schema & Reference
+
+Verified 2×9 EXTRUDER connector mapping:
+
+Row	Left Pin	Left Color	Left Icon	Right Pin	Right Color	Right Icon
+
+1	FAN0-	Green	Fan	FAN1-	White	Fan
+2	PB5	Grey	GPIO	Z0-	Blue	Sensor
+3	VCC	Yellow	Power	T1	White	Timer
+4	GND	Brown	Ground	T1	White	Timer
+5	T0	Black	Timer	T0	White	Timer
+6	PGND1	Yellow	Power GND	PGND1	Purple	Power GND
+7	VDC	Grey	Power	PGND1	White	Timer (?)
+8	VDC	Red	Heater	VDC	Orange	Heater
+9	HE1	White	Heater	HE0	Black	Heater
+
+
+
+---
+
+Final Safety & Verification Steps
+
+Confirm pin identities before cutting any wires.
+
+Before connecting mains, power the SKR from the PSU and verify that only expected 5 V lines are live.
+
+Validate heater and thermistor continuity/resistance before enabling heaters in firmware.
+
+Begin with conservative motor-current and PID values; run PID autotune on the hotend.
+
+Use proper strain relief, insulation, and cable management.
+
+
+
+---
+
+
+---
+
 # Marlin 3D Printer Firmware
 
 ![GitHub](https://img.shields.io/github/license/marlinfirmware/marlin.svg)
