@@ -280,10 +280,23 @@ Configuration.h
 #define ADAPTIVE_STEP_SMOOTHING
 
 ```
-Notes
+
+#### Notes
 - Always validate endstop behavior using M119 before enabling homing routines.
 - Verify thermistor readings at room temperature and after heating.
 - If you have different heaters/thermistors, set TEMP_SENSOR_* accordingly.
+
+#### Post-Flash Checklist
+This completes the firmware block. After compiling and flashing:
+ * Initialize EEPROM: Run M502 followed by M500 to load the new defaults.
+ * Test Endstops: Run M119. Manually trigger each endstop (X, Y, Z) and confirm they change from open to TRIGGERED. If they are reversed, flip the logic (e.g., false to true) for that endstop in Configuration.h.
+ * Test Motors: Home X, then Y, then Z. If any axis moves away from the endstop, power down and invert its direction (e.g., INVERT_X_DIR true to false) in Configuration.h.
+ * Re-Tune PIDs: The new board will have different heating characteristics.
+   * M303 E0 S210 C8 (Tune hotend to 210°C for 8 cycles)
+   * M303 E-1 S60 C8 (Tune bed to 60°C for 8 cycles)
+   * Use the new Kp, Ki, and Kd values returned, and save with M500.
+ * Calibrate E-Steps: Verify your 93 steps/mm value is still correct.
+ * Run Mesh Leveling: Use the LCD menu (Configuration -> Bed Leveling) to create and save a new bed mesh.
 
 ---
 
