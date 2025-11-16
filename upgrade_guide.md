@@ -6,7 +6,7 @@ Objective: Replace the GT2560 V4.0 mainboard with the SKR Mini E3 V3 without swa
 ---
 
 ## Summary
-This guide documents the required pin mappings, safety isolations, and recommended Marlin settings to migrate from the GT2560 V4.0 to the BTT SKR Mini E3 V3 while keeping the stock 18‑pin extruder harness.
+This guide documents the required pin mappings, safety isolations, and recommended Marlin settings to migrate from the GT2560 V4.0 to the BTT SKR Mini E3 V3 while keeping the stock 18‑pin extruder h[...]  
 
 Read the safety warnings and verify every wire with a multimeter before cutting, crimping, or connecting.
 
@@ -15,10 +15,10 @@ Read the safety warnings and verify every wire with a multimeter before cutting,
 ## Critical Safety Warnings
 
 ### DANGER — High voltage hazard
-Do NOT reuse the Geeetech external DC MOSFET module to switch AC mains (PS‑ON). That module is designed for low‑voltage DC only. Connecting AC mains to it may cause electrocution, fire, or irreversible damage.
+Do NOT reuse the Geeetech external DC MOSFET module to switch AC mains (PS‑ON). That module is designed for low‑voltage DC only. Connecting AC mains to it may cause electrocution, fire, or irrever[...]  
 
 ### WARNING — Board short risk (BLTouch-related pins)
-If you are NOT using a BLTouch, isolate the following wires in the 18‑pin harness. These pins (PB5, Z0‑, VCC, GND) provide voltage or ground paths that can short to the frame or other connectors, causing damage or a fire risk.
+If you are NOT using a BLTouch, isolate the following wires in the 18‑pin harness. These pins (PB5, Z0‑, VCC, GND) provide voltage or ground paths that can short to the frame or other connectors, [...]  
 
 Action: Cut these wires short and insulate each individually with heat shrink or high‑quality electrical tape.
 
@@ -71,17 +71,17 @@ Wiring diagram (Mermaid)
 ```mermaid
 graph LR
     subgraph Harness["Geeetech 18‑Pin Harness"]
-        HE_P[Red Black (HE0/VDC)]
-        TH_P[Black White (T0)]
-        HF_P[Orange Green (VDC/FAN0-)]
-        PC_P[Orange Yell+Purp (VDC/PGND1)]
+        HE_P["Red Black (HE0/VDC)"]
+        TH_P["Black White (T0)"]
+        HF_P["Orange Green (VDC/FAN0-)"]
+        PC_P["Orange Yell+Purp (VDC/PGND1)"]
     end
 
     subgraph SKR["SKR Mini E3 V3"]
-        HE_TERM[HE0 Terminal]
-        TH_PORT[TH0 Port]
-        FAN0_PORT[FAN0 Port]
-        FAN1_PORT[FAN1 Port]
+        HE_TERM["HE0 Terminal"]
+        TH_PORT["TH0 Port"]
+        FAN0_PORT["FAN0 Port"]
+        FAN1_PORT["FAN1 Port"]
     end
 
     HE_P -->|Heater Power| HE_TERM
@@ -187,4 +187,3 @@ Notes
 </details>
 
 ---
-
