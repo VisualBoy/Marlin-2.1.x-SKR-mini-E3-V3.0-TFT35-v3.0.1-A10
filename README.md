@@ -204,6 +204,8 @@ SKR:
 Toggle modes on TFT via encoder long-press.
 
 ───────────────────────────────────────────────────────────────────────────
+```
+
 ---
 
 # Marlin 3D Printer Firmware
