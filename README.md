@@ -1,109 +1,65 @@
-
-
 # Upgrading Geeetech A10 GT2560 V4 to BTT SKR Mini E3 V3 — Guide
 
-This guide documents verified wiring, safety precautions, and Marlin configuration notes for migrating a Geeetech A10 (GT2560 V4.0) to a BigTreeTech SKR Mini E3 V3. It assumes the stock 18-pin (2×9) EXTRUDER cable is present and that the pin labels have been verified before cutting or re-terminating. Follow all safety guidance precisely.
-
-
----
-
-Summary Checklist
-
-Remove any external heated-bed MOSFET and connect the bed directly to the SKR heated-bed screw terminal.
-
-Do not reuse the old DC MOSFET as a mains PS-ON device—use a proper AC relay.
-
-Isolate four BLTouch-related wires in the 18-pin harness (will carry 5 V when powered).
-
-Cut and re-terminate the 18-pin cable to the SKR ports listed below.
-
-Use the provided Marlin configuration snippet and migrate the rest of the A10 configuration accordingly.
-
-
+This guide documents verified wiring, safety precautions, and Marlin configuration notes for migrating a Geeetech A10 (GT2560 V4.0) to a BigTreeTech SKR Mini E3 V3. It assumes you have the stock 18‑pin (2×9) "EXTRUDER" cable and have verified the connector pin labels before cutting or re‑terminating. Follow safety warnings exactly.
 
 ---
 
-1. Power and Peripherals
-
-External MOSFET Module
-
-The SKR Mini E3 V3 includes an onboard heated-bed MOSFET suitable for direct bed wiring. Remove the external DC MOSFET module and connect the bed +/− to the SKR heated-bed screw terminal.
-
-> Warning:
-Do not use the external DC MOSFET module to switch AC mains (PS-ON). It is designed only for low-voltage DC and will pose a fire/electrocution risk. Use a rated AC relay or proper mains switching system.
-
-
-
-Endstops
-
-Geeetech endstops use 3 wires (VCC, GND, SIG); the SKR expects 2 wires (GND, SIG).
-
-You may plug the Geeetech 3-pin connector into the SKR 2-pin header ensuring GND and SIG align. VCC will remain unconnected.
-
-Preferred: remove the VCC wire from the connector and insulate it individually to prevent shorts.
-
-
+## Quick Checklist
+- **Remove** the external heated‑bed MOSFET module and connect bed wires directly to the SKR heated‑bed screw terminal.  
+- **Do not reuse** the old DC MOSFET for mains PS‑ON; use a proper AC relay.  
+- **Isolate** four BLTouch‑related wires in the 18‑pin harness (if you do not have a BLTouch).  
+- **Cut and re‑terminate** the 18‑pin cable according to the mapping table.  
+- **Transfer hardware settings** from the A10 configuration into Marlin for SKR.
 
 ---
 
-2. BTT TFT35 Display Connections
+## 1. Power and Peripherals
 
-Marlin Mode (12864 emulation): connect EXP1 and EXP2 ribbons to SKR EXP1/EXP2.
+### External MOSFET Module
+- The SKR Mini E3 V3 has an onboard heated‑bed MOSFET sized for direct bed connection. You may remove the external DC MOSFET module and connect the bed + and – directly to the SKR **DC Heated Bed screw terminal**.
+- **Warning**: Do **NOT** reuse the external DC MOSFET module for switching AC mains (PS‑ON). That module is for low‑voltage DC only and will create a fire/electrocution hazard. Use a rated AC relay or proper mains switching device for PS‑ON.
 
-Touchscreen Mode: connect the 5-pin RS232 cable to the SKR TFT port.
-
-
-Both modes can be connected simultaneously; switch modes via long-press on the TFT encoder.
-
-
----
-
-3. Extruder Harness Re-Termination (Verified)
-
-Cut the 18-pin harness and re-terminate groups to the corresponding SKR connectors.
-Verified mapping:
-
-Function	18-Pin Location & Label	Wire Color	SKR Mini E3 V3 Port
-
-Hotend Heater	Row 9 Right HE0; Row 8 Left VDC	Thick RED; Thick BLACK	Hotend Heater (screw terminal)
-Hotend Thermistor	Row 5 Left T0; Row 5 Right T0	Thin BLACK; Thin WHITE	T0 (JST-XH 2-pin)
-Hotend Fan (FAN0)	+: Row 8 Right VDC; −: Row 1 Left FAN0-	+ ORANGE; − GREEN	FAN0 (JST-XH 2-pin)
-Part-Cooling Fan	+: Row 8 Right VDC (split); −: Row 6 Left/Right PGND1 (join)	+ ORANGE (split); − YELLOW + VIOLET (joined)	Part-Cooling Fan (JST-XH 2-pin)
-
-
-Notes
-
-When splitting or joining wires, ensure mechanically solid joints, correct polarity, and proper insulation (heat-shrink, strain relief).
-
-Incorrect fan polarity may damage the fan.
-
-
+### Endstops
+- Geeetech endstops are 3‑wire (VCC, GND, SIG); the SKR expects 2‑wire (GND, SIG).
+- You can plug the 3‑pin plug into the SKR 2‑pin endstop header so GND and SIG align; the VCC pin will remain unconnected.
+- Preferred: de‑pin and remove the VCC wire and individually insulate it so it cannot short.
 
 ---
 
-4. Critical Live Wires to Isolate (No BLTouch)
-
-Without a BLTouch installed, four wires in the 18-pin harness carry 5 V when the SKR is powered. These must be individually cut and insulated.
-
-18-Pin	Label	Color	Action
-
-Pin 2 Left	PB5	Gray	Isolate individually
-Pin 2 Right	Z0-	Blue	Isolate individually
-Pin 3 Left	VCC	Thin Yellow	Isolate individually
-Pin 4 Left	GND	Brown	Isolate individually
-
-
-After isolating these wires, connect a standard mechanical Z endstop to the SKR Z-STOP header.
-
+## 2. BTT TFT35 Display
+- **Marlin Mode (12864 emulation)**: connect display EXP1 and EXP2 ribbons to SKR EXP1/EXP2.  
+- **Touchscreen Mode**: connect the 5‑pin RS232 cable to the SKR **TFT** port.  
+- You can wire both and switch modes on the TFT by long‑pressing the encoder.
 
 ---
 
-5. Firmware (Marlin) Essentials
+## 3. Extruder Harness Re‑termination (verified)
+Cut the 18‑pin (2×9) harness and re‑terminate groups to the SKR board connectors. The table below maps each function, the verified 18‑pin location, wire color(s), and the SKR destination.
 
-Port all relevant hardware configuration details from the original A10 build into the SKR Marlin firmware.
+| **Function** | **18‑Pin Location & Label** | **Wire Color** | **SKR Mini E3 V3 Port** |
+|---|---:|---|---|
+| Hotend Heater | Row 9 Right HE0; Row 8 Left VDC | Thick RED; Thick BLACK | Hot End Heater (screw terminal) |
+| Hotend Thermistor | Row 5 Left T0; Row 5 Right T0 | Thin BLACK; Thin WHITE | T0 (JST‑XH 2‑pin) |
+| Hotend Fan FAN0 | +: Row 8 Right VDC; –: Row 1 Left FAN0- | +: ORANGE; –: GREEN | FAN0 (JST‑XH 2‑pin) |
+| Part Cooling Fan | +: Row 8 Right VDC (split); –: Row 6 Left PGND1 & Row 6 Right PGND1 (join) | +: ORANGE (split); –: YELLOW + VIOLET (joined) | Part Cooling Fan (JST‑XH 2‑pin) |
 
-Minimal required entries:
+---
 
+## 4. Critical Live Wires to Isolate (no BLTouch)
+You indicated you do **not** have a BLTouch. Four wires in the 18‑pin harness will be live at 5 V on the SKR when powered. These must be cut and individually insulated. Failure to isolate them will short the board and can destroy the SKR.
+
+- Pin (2, Left) PB5 — Gray — isolate individually  
+- Pin (2, Right) Z0- — Blue — isolate individually  
+- Pin (3, Left) VCC — Yellow (thin) — isolate individually  
+- Pin (4, Left) GND — Brown — isolate individually
+
+After isolation, connect a standard mechanical Z endstop to the SKR **Z‑STOP** port.
+
+---
+
+## 5. Firmware (Marlin) Essentials
+
+```cpp
 // Motherboard
 #define MOTHERBOARD BOARD_BTT_SKR_MINI_E3_V3_0
 
@@ -113,62 +69,141 @@ Minimal required entries:
 #define Z_DRIVER_TYPE  TMC2209
 #define E0_DRIVER_TYPE TMC2209
 
-// Thermistors (match original A10 config)
-#define TEMP_SENSOR_0    1
-#define TEMP_SENSOR_BED  1
+// Thermistors (use values from your old A10 config)
+#define TEMP_SENSOR_0 1
+#define TEMP_SENSOR_BED 1
 
 // Endstop logic
 #define X_MIN_ENDSTOP_INVERTING false
 #define Y_MIN_ENDSTOP_INVERTING false
 #define Z_MIN_ENDSTOP_INVERTING false
-
-To-Do:
-
-[ ] Port steps/mm, accelerations, PID values, probe offsets, motor currents, and precise sensor types.
-
-[ ] Verify TMC2209 UART wiring and enable UART mode in Marlin if using sensorless homing or driver diagnostics.
-
-
+```
 
 ---
 
-6. 18-Pin Connector — Full Schema & Reference
+## 6. 18‑Pin Connector Mapping (verified)
 
-Verified 2×9 EXTRUDER connector mapping:
-
-Row	Left Pin	Left Color	Left Icon	Right Pin	Right Color	Right Icon
-
-1	FAN0-	Green	Fan	FAN1-	White	Fan
-2	PB5	Grey	GPIO	Z0-	Blue	Sensor
-3	VCC	Yellow	Power	T1	White	Timer
-4	GND	Brown	Ground	T1	White	Timer
-5	T0	Black	Timer	T0	White	Timer
-6	PGND1	Yellow	Power GND	PGND1	Purple	Power GND
-7	VDC	Grey	Power	PGND1	White	Timer (?)
-8	VDC	Red	Heater	VDC	Orange	Heater
-9	HE1	White	Heater	HE0	Black	Heater
-
-
-
----
-
-Final Safety & Verification Steps
-
-Confirm pin identities before cutting any wires.
-
-Before connecting mains, power the SKR from the PSU and verify that only expected 5 V lines are live.
-
-Validate heater and thermistor continuity/resistance before enabling heaters in firmware.
-
-Begin with conservative motor-current and PID values; run PID autotune on the hotend.
-
-Use proper strain relief, insulation, and cable management.
-
-
+| **Row** | **Side** | **Label** | **Color** | **Status** |
+|---:|---:|---|---|---:|
+| 1 | Left | FAN0- | Green | Connected |
+| 1 | Right | FAN1- | (empty) | Not populated |
+| 2 | Left | PB5 | Gray | Connected |
+| 2 | Right | Z0- | Blue | Connected |
+| 3 | Left | VCC | Yellow | Connected |
+| 3 | Right | T1 | (empty) | Not populated |
+| 4 | Left | GND | Brown | Connected |
+| 4 | Right | T1 | (empty) | Not populated |
+| 5 | Left | T0 | Black | Connected |
+| 5 | Right | T0 | White | Connected |
+| 6 | Left | PGND1 | Yellow | Connected |
+| 6 | Right | PGND1 | Purple | Connected |
+| 7 | Left | VDC | (empty) | Not populated |
+| 7 | Right | PGND1 | (empty) | Not populated |
+| 8 | Left | VDC | Red | Connected |
+| 8 | Right | VDC | Orange | Connected |
+| 9 | Left | HE1 | (empty) | Not populated |
+| 9 | Right | HE0 | Black | Connected |
 
 ---
 
+## KiCad ASCII Wiring Diagram
 
+```text
+┌───────────────────────────────────────────────────────────────────────┐
+│   GEEETECH A10 – 18-PIN EXTRUDER CONNECTOR (2×9)                     │
+│                                                                       │
+│   ROW 9   [HE1] White        [HE0] Black                              │
+│   ROW 8   [VDC] Red          [VDC] Orange → +24V FAN/HEATER          │
+│   ROW 7   [VDC] Grey         [PGND1] White                            │
+│   ROW 6   [PGND1] Yellow     [PGND1] Purple                           │
+│   ROW 5   [T0] Black         [T0] White                               │
+│   ROW 4   [GND] Brown        [T1] White                               │
+│   ROW 3   [VCC] Yellow       [T1] White                               │
+│   ROW 2   [PB5] Grey         [Z0-] Blue                               │
+│   ROW 1   [FAN0-] Green      [FAN1-] White                            │
+│                                                                       │
+└───────────────────────────────────────────────────────────────────────┘
+
+             ↓  Re-terminated wires
+─────────────────────────────────────────────────────────────────────────────
+
+                        ┌───────────────────────────────┐
+                        │   SKR MINI E3 V3 – INPUTS     │
+                        └───────────────────────────────┘
+
+
+════════════════════════ HOTEND HEATER (HE0) ════════════════════════
+
+18-PIN:
+    • HE0 → Black (Row 9 Right)
+    • VDC → Red (Row 8 Left)
+
+SKR:
+    ┌──────────────────────────┐
+    │  HE0 SCREW TERMINAL      │
+    │  +  → RED                │
+    │  –  → BLACK              │
+    └──────────────────────────┘
+
+
+════════════════════════ HOTEND THERMISTOR (T0) ═════════════════════
+
+18-PIN:
+    • T0 Left  → Black  (Row 5 Left)
+    • T0 Right → White  (Row 5 Right)
+
+SKR:
+    ┌──────────────────────────┐
+    │  T0 (JST-XH 2-PIN)       │
+    │  SIG/GND → Black/White   │
+    └──────────────────────────┘
+
+
+════════════════════════ HOTEND FAN (FAN0) ══════════════════════════
+
+18-PIN:
+    • +VDC → Orange (Row 8 Right)
+    • FAN0- → Green (Row 1 Left
+
+════════════════════════ PART COOLING FAN ═══════════════════════════
+
+18-PIN:
+    • +VDC → Orange (Row 8 Right split)
+    • GND  → YELLOW + VIOLET joined (Row 6 L/R PGND1)
+
+SKR:
+    ┌──────────────────────────┐
+    │ PART COOLING FAN         │
+    │  + → Orange (split)      │
+    │  – → Yellow+Violet       │
+    └──────────────────────────┘
+
+
+════════════════════════ ENDSTOP (Z) ════════════════════════════════
+
+**IMPORTANT:** You indicated *no BLTouch* → these four wires must be ISOLATED:
+
+    • PB5  (Gray)  
+    • Z0-  (Blue)  
+    • VCC  (Thin Yellow)  
+    • GND  (Brown)  
+
+SKR:
+    ┌──────────────────────────┐
+    │ MECHANICAL Z ENDSTOP     │
+    │  SIG/GND → New cable     │
+    └──────────────────────────┘
+
+
+════════════════════════ TFT DISPLAY ════════════════════════════════
+
+SKR:
+    ┌──────────────┬───────────────┐
+    │ EXP1 / EXP2  │ TFT (RS232)   │
+    └──────────────┴───────────────┘
+Toggle modes on TFT via encoder long-press.
+
+───────────────────────────────────────────────────────────────────────────
 ---
 
 # Marlin 3D Printer Firmware
