@@ -71,10 +71,10 @@ Wiring diagram (Mermaid)
 ```mermaid
 graph LR
     subgraph Harness["Geeetech 18‑Pin Harness"]
-        HE_P[Red/Black (HE0/VDC)]
-        TH_P[Black/White (T0)]
-        HF_P[Orange/Green (VDC/FAN0-)]
-        PC_P[Orange/Yell+Purp (VDC/PGND1)]
+        HE_P[Red Black (HE0/VDC)]
+        TH_P[Black White (T0)]
+        HF_P[Orange Green (VDC/FAN0-)]
+        PC_P[Orange Yell+Purp (VDC/PGND1)]
     end
 
     subgraph SKR["SKR Mini E3 V3"]
