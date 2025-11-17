@@ -33,15 +33,77 @@ This guide documents verified wiring, safety precautions, and Marlin configurati
 
 ---
 
-## 3. Extruder Harness Re‑termination (verified)
-Cut the 18‑pin (2×9) harness and re‑terminate groups to the SKR board connectors. The table below maps each function, the verified 18‑pin location, wire color(s), and the SKR destination.
+## 3. Extruder Harness Re‑termination 
 
-| **Function** | **18‑Pin Location & Label** | **Wire Color** | **SKR Mini E3 V3 Port** |
-|---|---:|---|---|
-| Hotend Heater | Row 9 Right HE0; Row 8 Left VDC | Thick RED; Thick BLACK | Hot End Heater (screw terminal) |
-| Hotend Thermistor | Row 5 Left T0; Row 5 Right T0 | Thin BLACK; Thin WHITE | T0 (JST‑XH 2‑pin) |
-| Hotend Fan FAN0 | +: Row 8 Right VDC; –: Row 1 Left FAN0- | +: ORANGE; –: GREEN | FAN0 (JST‑XH 2‑pin) |
-| Part Cooling Fan | +: Row 8 Right VDC (split); –: Row 6 Left PGND1 & Row 6 Right PGND1 (join) | +: ORANGE (split); –: YELLOW + VIOLET (joined) | Part Cooling Fan (JST‑XH 2‑pin) |
+# 🧩 2×8 Pin Connector Mapping (Extruder Breakout)
+
+| Physical Position | Row 1 (Top) | Row 2 (Bottom) | Function |
+|---|---|---|---|
+| Pin 1 | Z0− | T0 | Z Endstop / Hotend Thermistor |
+| Pin 2 | PB5 | VCC | MCU I/O / 5V Logic Power |
+| Pin 3 | PGND1 | GND | Power Ground / Logic Ground |
+| Pin 4 | VDC | T0 | +24V / Hotend Thermistor |
+| Pin 5 | VDC | HE0− | +24V / Hotend Heater (MOSFET return) |
+| Pin 6 | PGND1 | FAN0− | Power Ground / Hotend Fan (MOSFET return) |
+| Pin 7 | (empty) | (empty) | — |
+| Pin 8 | (empty) | (empty) | — |
+
+---
+
+## 🔌 Functional Interpretation
+
+- **T0** (Row 2, Pins 1 & 4) → hotend thermistor (analog pair).
+- **HE0−** (Row 2, Pin 5) → MOSFET return for heater cartridge.
+- **FAN0−** (Row 2, Pin 6) → MOSFET return for hotend fan.
+- **VDC** (Row 1, Pins 4 & 5) → distributed 24V power.
+- **PGND1** (Row 1, Pins 3 & 6) → shared power ground.
+- **VCC / GND** (Row 2, Pins 2 & 3) → 5V logic power / logic ground.
+- **Z0− / PB5** (Row 1, Pins 1 & 2) → Z endstop / MCU I/O (not used in your case).
+
+---
+
+# ⚡ Final Cable Mapping → SKR Mini V3
+
+Based on the PCB labels and your connector colors, here is how to connect the wires to the SKR Mini V3:
+
+1.  **Hotend Heater**
+    - Function: HE0- (heater negative control)
+    - Wire: ⚫ Black (thick)
+    - SKR Connection: HE0 Port, negative pin (HE0-).
+
+2.  **Part Cooling Fan**
+    - Function: FAN0- (fan negative control)
+    - Wire: 🟩 Green
+    - SKR Connection: FAN0 Port, negative pin (FAN0-).
+      *(Note: The 18-pin diagram called it FAN0-, your breakout board uses it for the J6 "pwm fan". This is correct).*
+
+3.  **Hotend Thermistor**
+    - Function: T0 (thermistor signal pair)
+    - Wires: ⚫ Black (thin) + ⚪️ White
+    - SKR Connection: TH0 Port (the 2 pins). Polarity does not matter.
+
+4.  **Main Power (VDC) and Grounds (PGND)**
+    - Function: VDC (+24V)
+    - Wires: 🔴 Red + 🟧 Orange
+    - SKR Connection: HE0 Port, positive pin (V+).
+    - Function: PGND1 (Power Ground)
+    - Wires: 🟨 Yellow (thick) + 🟣 Purple
+    - SKR Connection: HE0 Port (near the negative pin) or to the main power supply V- terminal.
+
+5.  **Sensor (BLTouch) and Logic Wires**
+    - Function: Z0-, PB5, VCC, GND
+    - Wires: 🔵 Blue, ⚪️ Gray, 🟨 Yellow (thin), 🟫 Brown
+    - SKR Connection: PROBE Port (5-pin) for the 3D Touch.
+      - GND (Brown) → GND Pin
+      - VCC (Yellow thin) → 5V Pin
+      - Z0- (Blue) → GND Pin (for Z-min signal)
+      - PB5 (Gray) → IN Pin (for Servo signal)
+
+6.  **Unused Wire (from breakout)**
+    - Function: FAN1- (in the 18-pin diagram)
+    - Wire: not used on your breakout board.
+    - Action: If the hotend fan (J7) was always on, do not connect other wires. It already gets power from VDC (Red/Orange).
+
 
 ---
 
