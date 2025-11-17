@@ -1,3 +1,275 @@
+# Upgrading Geeetech A10 GT2560 V4 to BTT SKR Mini E3 V3 — Guide
+
+This guide documents verified wiring, safety precautions, and Marlin configuration notes for migrating a Geeetech A10 (GT2560 V4.0) to a BigTreeTech SKR Mini E3 V3. It assumes you have the stock 18‑pin (2×9) "EXTRUDER" cable and have verified the connector pin labels before cutting or re‑terminating. Follow safety warnings exactly.
+
+---
+
+## Quick Checklist
+- **Remove** the external heated‑bed MOSFET module and connect bed wires directly to the SKR heated‑bed screw terminal.  
+- **Do not reuse** the old DC MOSFET for mains PS‑ON; use a proper AC relay.  
+- **Isolate** four BLTouch‑related wires in the 18‑pin harness (if you do not have a BLTouch).  
+- **Cut and re‑terminate** the 18‑pin cable according to the mapping table.  
+- **Transfer hardware settings** from the A10 configuration into Marlin for SKR.
+
+---
+
+## 1. Power and Peripherals
+
+### External MOSFET Module
+- The SKR Mini E3 V3 has an onboard heated‑bed MOSFET sized for direct bed connection. You may remove the external DC MOSFET module and connect the bed + and – directly to the SKR **DC Heated Bed screw terminal**.
+- **Warning**: Do **NOT** reuse the external DC MOSFET module for switching AC mains (PS‑ON). That module is for low‑voltage DC only and will create a fire/electrocution hazard. Use a rated AC relay or proper mains switching device for PS‑ON.
+
+### Endstops
+- Geeetech endstops are 3‑wire (VCC, GND, SIG); the SKR expects 2‑wire (GND, SIG).
+- You can plug the 3‑pin plug into the SKR 2‑pin endstop header so GND and SIG align; the VCC pin will remain unconnected.
+- Preferred: de‑pin and remove the VCC wire and individually insulate it so it cannot short.
+
+---
+
+## 2. BTT TFT35 Display
+- **Marlin Mode (12864 emulation)**: connect display EXP1 and EXP2 ribbons to SKR EXP1/EXP2.  
+- **Touchscreen Mode**: connect the 5‑pin RS232 cable to the SKR **TFT** port.  
+- You can wire both and switch modes on the TFT by long‑pressing the encoder.
+
+---
+
+## 3. Extruder Harness Re‑termination 
+
+# 🧩 2×8 Pin Connector Mapping (Extruder Breakout)
+
+| Physical Position | Row 1 (Top) | Row 2 (Bottom) | Function |
+|---|---|---|---|
+| Pin 1 | Z0− | T0 | Z Endstop / Hotend Thermistor |
+| Pin 2 | PB5 | VCC | MCU I/O / 5V Logic Power |
+| Pin 3 | PGND1 | GND | Power Ground / Logic Ground |
+| Pin 4 | VDC | T0 | +24V / Hotend Thermistor |
+| Pin 5 | VDC | HE0− | +24V / Hotend Heater (MOSFET return) |
+| Pin 6 | PGND1 | FAN0− | Power Ground / Hotend Fan (MOSFET return) |
+| Pin 7 | (empty) | (empty) | — |
+| Pin 8 | (empty) | (empty) | — |
+
+---
+
+## 🔌 Functional Interpretation
+
+- **T0** (Row 2, Pins 1 & 4) → hotend thermistor (analog pair).
+- **HE0−** (Row 2, Pin 5) → MOSFET return for heater cartridge.
+- **FAN0−** (Row 2, Pin 6) → MOSFET return for hotend fan.
+- **VDC** (Row 1, Pins 4 & 5) → distributed 24V power.
+- **PGND1** (Row 1, Pins 3 & 6) → shared power ground.
+- **VCC / GND** (Row 2, Pins 2 & 3) → 5V logic power / logic ground.
+- **Z0− / PB5** (Row 1, Pins 1 & 2) → Z endstop / MCU I/O (not used in your case).
+
+---
+
+# ⚡ Final Cable Mapping → SKR Mini V3
+
+Based on the PCB labels and your connector colors, here is how to connect the wires to the SKR Mini V3:
+
+1.  **Hotend Heater**
+    - Function: HE0- (heater negative control)
+    - Wire: ⚫ Black (thick)
+    - SKR Connection: HE0 Port, negative pin (HE0-).
+
+2.  **Part Cooling Fan**
+    - Function: FAN0- (fan negative control)
+    - Wire: 🟩 Green
+    - SKR Connection: FAN0 Port, negative pin (FAN0-).
+      *(Note: The 18-pin diagram called it FAN0-, your breakout board uses it for the J6 "pwm fan". This is correct).*
+
+3.  **Hotend Thermistor**
+    - Function: T0 (thermistor signal pair)
+    - Wires: ⚫ Black (thin) + ⚪️ White
+    - SKR Connection: TH0 Port (the 2 pins). Polarity does not matter.
+
+4.  **Main Power (VDC) and Grounds (PGND)**
+    - Function: VDC (+24V)
+    - Wires: 🔴 Red + 🟧 Orange
+    - SKR Connection: HE0 Port, positive pin (V+).
+    - Function: PGND1 (Power Ground)
+    - Wires: 🟨 Yellow (thick) + 🟣 Purple
+    - SKR Connection: HE0 Port (near the negative pin) or to the main power supply V- terminal.
+
+5.  **Sensor (BLTouch) and Logic Wires**
+    - Function: Z0-, PB5, VCC, GND
+    - Wires: 🔵 Blue, ⚪️ Gray, 🟨 Yellow (thin), 🟫 Brown
+    - SKR Connection: PROBE Port (5-pin) for the 3D Touch.
+      - GND (Brown) → GND Pin
+      - VCC (Yellow thin) → 5V Pin
+      - Z0- (Blue) → GND Pin (for Z-min signal)
+      - PB5 (Gray) → IN Pin (for Servo signal)
+
+6.  **Unused Wire (from breakout)**
+    - Function: FAN1- (in the 18-pin diagram)
+    - Wire: not used on your breakout board.
+    - Action: If the hotend fan (J7) was always on, do not connect other wires. It already gets power from VDC (Red/Orange).
+
+
+---
+
+## 4. Critical Live Wires to Isolate (no BLTouch)
+You indicated you do **not** have a BLTouch. Four wires in the 18‑pin harness will be live at 5 V on the SKR when powered. These must be cut and individually insulated. Failure to isolate them will short the board and can destroy the SKR.
+
+- Pin (2, Left) PB5 — Gray — isolate individually  
+- Pin (2, Right) Z0- — Blue — isolate individually  
+- Pin (3, Left) VCC — Yellow (thin) — isolate individually  
+- Pin (4, Left) GND — Brown — isolate individually
+
+After isolation, connect a standard mechanical Z endstop to the SKR **Z‑STOP** port.
+
+---
+
+## 5. Firmware (Marlin) Essentials
+
+```cpp
+// Motherboard
+#define MOTHERBOARD BOARD_BTT_SKR_MINI_E3_V3_0
+
+// Stepper driver types
+#define X_DRIVER_TYPE  TMC2209
+#define Y_DRIVER_TYPE  TMC2209
+#define Z_DRIVER_TYPE  TMC2209
+#define E0_DRIVER_TYPE TMC2209
+
+// Thermistors (use values from your old A10 config)
+#define TEMP_SENSOR_0 1
+#define TEMP_SENSOR_BED 1
+
+// Endstop logic
+#define X_MIN_ENDSTOP_INVERTING false
+#define Y_MIN_ENDSTOP_INVERTING false
+#define Z_MIN_ENDSTOP_INVERTING false
+```
+
+---
+
+## 6. 18‑Pin Connector Mapping (verified)
+
+| **Row** | **Side** | **Label** | **Color** | **Status** |
+|---:|---:|---|---|---:|
+| 1 | Left | FAN0- | Green | Connected |
+| 1 | Right | FAN1- | (empty) | Not populated |
+| 2 | Left | PB5 | Gray | Connected |
+| 2 | Right | Z0- | Blue | Connected |
+| 3 | Left | VCC | Yellow | Connected |
+| 3 | Right | T1 | (empty) | Not populated |
+| 4 | Left | GND | Brown | Connected |
+| 4 | Right | T1 | (empty) | Not populated |
+| 5 | Left | T0 | Black | Connected |
+| 5 | Right | T0 | White | Connected |
+| 6 | Left | PGND1 | Yellow | Connected |
+| 6 | Right | PGND1 | Purple | Connected |
+| 7 | Left | VDC | (empty) | Not populated |
+| 7 | Right | PGND1 | (empty) | Not populated |
+| 8 | Left | VDC | Red | Connected |
+| 8 | Right | VDC | Orange | Connected |
+| 9 | Left | HE1 | (empty) | Not populated |
+| 9 | Right | HE0 | Black | Connected |
+
+---
+
+## KiCad ASCII Wiring Diagram
+
+```text
+┌───────────────────────────────────────────────────────────────────────┐
+│   GEEETECH A10 – 18-PIN EXTRUDER CONNECTOR (2×9)                     │
+│                                                                       │
+│   ROW 9   [HE1] White        [HE0] Black                              │
+│   ROW 8   [VDC] Red          [VDC] Orange → +24V FAN/HEATER          │
+│   ROW 7   [VDC] Grey         [PGND1] White                            │
+│   ROW 6   [PGND1] Yellow     [PGND1] Purple                           │
+│   ROW 5   [T0] Black         [T0] White                               │
+│   ROW 4   [GND] Brown        [T1] White                               │
+│   ROW 3   [VCC] Yellow       [T1] White                               │
+│   ROW 2   [PB5] Grey         [Z0-] Blue                               │
+│   ROW 1   [FAN0-] Green      [FAN1-] White                            │
+│                                                                       │
+└───────────────────────────────────────────────────────────────────────┘
+
+             ↓  Re-terminated wires
+─────────────────────────────────────────────────────────────────────────────
+
+                        ┌───────────────────────────────┐
+                        │   SKR MINI E3 V3 – INPUTS     │
+                        └───────────────────────────────┘
+
+
+════════════════════════ HOTEND HEATER (HE0) ════════════════════════
+
+18-PIN:
+    • HE0 → Black (Row 9 Right)
+    • VDC → Red (Row 8 Left)
+
+SKR:
+    ┌──────────────────────────┐
+    │  HE0 SCREW TERMINAL      │
+    │  +  → RED                │
+    │  –  → BLACK              │
+    └──────────────────────────┘
+
+
+════════════════════════ HOTEND THERMISTOR (T0) ═════════════════════
+
+18-PIN:
+    • T0 Left  → Black  (Row 5 Left)
+    • T0 Right → White  (Row 5 Right)
+
+SKR:
+    ┌──────────────────────────┐
+    │  T0 (JST-XH 2-PIN)       │
+    │  SIG/GND → Black/White   │
+    └──────────────────────────┘
+
+
+════════════════════════ HOTEND FAN (FAN0) ══════════════════════════
+
+18-PIN:
+    • +VDC → Orange (Row 8 Right)
+    • FAN0- → Green (Row 1 Left
+
+════════════════════════ PART COOLING FAN ═══════════════════════════
+
+18-PIN:
+    • +VDC → Orange (Row 8 Right split)
+    • GND  → YELLOW + VIOLET joined (Row 6 L/R PGND1)
+
+SKR:
+    ┌──────────────────────────┐
+    │ PART COOLING FAN         │
+    │  + → Orange (split)      │
+    │  – → Yellow+Violet       │
+    └──────────────────────────┘
+
+
+════════════════════════ ENDSTOP (Z) ════════════════════════════════
+
+**IMPORTANT:** You indicated *no BLTouch* → these four wires must be ISOLATED:
+
+    • PB5  (Gray)  
+    • Z0-  (Blue)  
+    • VCC  (Thin Yellow)  
+    • GND  (Brown)  
+
+SKR:
+    ┌──────────────────────────┐
+    │ MECHANICAL Z ENDSTOP     │
+    │  SIG/GND → New cable     │
+    └──────────────────────────┘
+
+
+════════════════════════ TFT DISPLAY ════════════════════════════════
+
+SKR:
+    ┌──────────────┬───────────────┐
+    │ EXP1 / EXP2  │ TFT (RS232)   │
+    └──────────────┴───────────────┘
+Toggle modes on TFT via encoder long-press.
+
+───────────────────────────────────────────────────────────────────────────
+```
+
+---
+
 # Marlin 3D Printer Firmware
 
 ![GitHub](https://img.shields.io/github/license/marlinfirmware/marlin.svg)
